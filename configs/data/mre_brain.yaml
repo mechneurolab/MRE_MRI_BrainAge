@@ -1,0 +1,8 @@
+_target_: src.data.mre_brain_datamodule.MREBrainDataModule
+data_dir: ${paths.data_dir}
+splits_dir: ${paths.splits_dir}
+batch_size: 4
+train_val_test_split: [166, 56, 57]
+map_type: "Stiffness"
+num_workers: 4
+pin_memory: False

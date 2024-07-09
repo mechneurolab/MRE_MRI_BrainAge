@@ -1,0 +1,123 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: mre_brain.yaml
+  - override /model: mre_brain_.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: default.yaml
+
+  
+task_name: train
+tags:
+- dev
+train: true
+test: true
+ckpt_path: '/work/cniel/sw/BrainAge_torch/project/logs/train/multiruns/2024-02-08_19-36-07/65/checkpoints/epoch_047.ckpt'
+seed: 12345
+data:
+  _target_: src.data.mre_brain_datamodule.MREBrainDataModule
+  data_dir: ${paths.data_dir}
+  splits_dir: ${paths.splits_dir}
+  batch_size: 4
+  train_val_test_split:
+  - 166
+  - 56
+  - 57
+  map_type: Stiffness-Volume
+  num_workers: 5
+  pin_memory: false
+model:
+  _target_: src.models.mre_brain_module.MREBrainLitModule
+  optimizer:
+    _target_: torch.optim.SGD
+    _partial_: true
+    lr: 4.100522013988171e-05
+    weight_decay: 10.0
+    momentum: 0.5
+    nesterov: true
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
+    _partial_: true
+    T_0: 10
+    eta_min: 0.000001
+  net:
+    _target_: src.models.components.resnet3d.ResNet3D
+    num_input_maps: 2
+    block_name: PreActResNetBlock
+    num_blocks:
+    - 3
+    - 4
+    - 6
+    - 3
+    c_hidden:
+    - 128
+    - 256
+    - 512
+    - 1024
+    cat_input_type: sex_study
+    arc_type: '1'
+callbacks:
+  model_checkpoint:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    dirpath: ${paths.output_dir}/checkpoints
+    filename: epoch_{epoch:03d}
+    monitor: val/loss
+    verbose: false
+    save_last: false
+    save_top_k: 1
+    mode: min
+    auto_insert_metric_name: false
+    save_weights_only: false
+    every_n_train_steps: null
+    train_time_interval: null
+    every_n_epochs: null
+    save_on_train_epoch_end: null
+  early_stopping:
+    _target_: pytorch_lightning.callbacks.EarlyStopping
+    monitor: val/loss
+    min_delta: 0.0
+    patience: 50
+    verbose: false
+    mode: min
+    strict: true
+    check_finite: true
+    stopping_threshold: null
+    divergence_threshold: null
+    check_on_train_epoch_end: null
+  model_summary:
+    _target_: pytorch_lightning.callbacks.RichModelSummary
+    max_depth: -1
+  rich_progress_bar:
+    _target_: pytorch_lightning.callbacks.RichProgressBar
+logger:
+  csv:
+    _target_: pytorch_lightning.loggers.csv_logs.CSVLogger
+    save_dir: ${paths.output_dir}
+    name: csv/
+    prefix: ''
+trainer:
+  _target_: pytorch_lightning.Trainer
+  default_root_dir: ${paths.output_dir}
+  min_epochs: 1
+  max_epochs: 100
+  accelerator: gpu
+  devices: 1
+  num_nodes: 1
+  precision: 16
+  check_val_every_n_epoch: 1
+  deterministic: false
+paths:
+  root_dir: ${oc.env:PROJECT_ROOT}
+  data_dir: /work/cniel/sw/BrainAge_torch/project/../data/
+  splits_dir: /work/cniel/sw/BrainAge_torch/project/../data/splits/split5/
+  log_dir: ${paths.root_dir}/logs/
+  output_dir: ${hydra:runtime.output_dir}
+  work_dir: ${hydra:runtime.cwd}
+extras:
+  ignore_warnings: false
+  enforce_tags: true
+  print_config: true
+optimized_metric: val/loss_best

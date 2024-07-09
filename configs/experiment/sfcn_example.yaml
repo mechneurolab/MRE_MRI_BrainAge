@@ -1,0 +1,80 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /data: mre_brain.yaml
+  - override /model: mre_brain.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["brain_age", "sfcn"]
+
+seed: 12345
+
+trainer:
+  # min_epochs: 10
+  max_epochs: 10
+  devices: 1
+  accelerator: gpu
+  
+  # strategy: ddp
+  # gradient_clip_val: 0.5
+
+callbacks:
+  model_checkpoint:
+    monitor: "val/loss"
+    mode: "min"
+
+  early_stopping:
+    monitor: "val/loss"
+
+model:
+  optimizer:
+    _target_: torch.optim.SGD
+    lr: 0.01
+    momentum: 0.7
+    weight_decay: 1.0
+    nesterov: true
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    mode: min
+    factor: 0.1
+    patience: 10
+  net:
+    # net:
+    _target_: src.models.components.sfcn.SFCN
+    # block_name:  "PreActResNetBlock"
+    # num_blocks: [3,4,6,3]
+    c_hidden: [32, 64, 128, 64]
+    # c_hidden: [64, 128, 256, 128]
+    num_input_maps: 1
+    # cat_input_type: "none"
+    # lin3_size: 64
+
+data:
+  batch_size: 24
+  num_workers: 5
+  map_type: "Stiffness"
+
+paths:
+  data_dir: ${paths.root_dir}/../data/
+  splits_dir: ${paths.root_dir}/../data/splits/split3/
+  
+
+# logger:
+#   wandb:
+#     tags: ${tags}
+#     group: "mnist"
+
+# params:
+#   
+#   model.net.num_input_maps: 1
+#   data.batch_size: choice(4, 8, 12, 16, 20, 24, 28)
+#   model.optimizer.lr: interval(0.00001, 0.01)
+#   model.net.cat_input_type: choice('"none"','"sex"','"study"','"sex_study"')
+#   model.net.arc_type: choice('"1"','"2"','"3"','"4"')
