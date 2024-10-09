@@ -8,11 +8,12 @@ Given that MRE is still an emerging neuroimaging technique and previously publis
 <img src="figs/raw_maps.png" width="500">
 
 ## Model Architectures
-We selected ResNet and SFCN as deep learning architectures as they show a strong performance when using voxel-based inputs. Specifically, we implemented the Resnet-34 [architecture](figs/resnet_model.png) with pre-activation Residual Units and a regression head. The SFCN was mostly implemented as described in the original protocol, modifying the last head for a regression head.
+We selected [ResNet](https://github.com/cesar-claros/MRE_MRI_BrainAge/blob/main/src/models/components/resnet3d.py) and [SFCN](https://github.com/cesar-claros/MRE_MRI_BrainAge/blob/main/src/models/components/sfcn.py) as deep learning architectures as they show a strong performance when using voxel-based inputs. Specifically, we implemented the Resnet-34 [architecture](figs/resnet_model.png) with pre-activation Residual Units and a regression head. The SFCN was mostly implemented as described in the original protocol, modifying the last head for a regression head.
 
 <!-- ![model](figs/resnet_model.png "Resnet-34 architecture" =250x250) -->
 <img src="figs/resnet_model.png" width="500">
 
+Implementations can be found [here](https://github.com/cesar-claros/MRE_MRI_BrainAge/tree/main/src/models)
 ## Model Predictions
 Figures below show scatter plots of the true age ($x$-axis) versus brain age predictions ($y$-axis) for each subject in each one of the test sets for ResNet and SFCN trained models, respectively. When a prediction matches exactly the true age, it lies on the diagonal dashed line. Each row corresponds to a different kind of input, and each column is associated with the data set split used to train the models. $R^2$ scores are reported for each split and input. Additionally, the $R^2$ and RMSE scores for the predictions across all folds are reported for each input at the far right. Stiffness and volume as independent inputs show similar performance in terms of $R^2$ and RMSE. A multimodal input that combines stiffness and volume is the best performing model for both trained models.
 ResNet             |  SFCN
